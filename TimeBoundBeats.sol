@@ -31,7 +31,8 @@ mapping (string author => uint256[]) public authorTitles;
 
 // Payment configuration
 IERC20 public paymentToken;
-uint256 public rentalFee = 10e8;
+uint256 public rentalFee = 12; // 1 USDC/d per title; 86.400 s/d;  1 USDC = 1000000; 1000000/86400 = 11.57 = 12
+uint256 public platformFeeBPS = 30; // 0.3% von rentalFee
 
 // Events
 event PaymentTokenUpdated(address indexed newToken);
@@ -65,26 +66,46 @@ event RentalFeeUpdated(uint256 newFee);
         Title storage title = titles[_index];
         require(title.owner != msg.sender, "You are the owner of this title");
         require(paymentToken != IERC20(address(0)), "Payment token not configured");
-        
-        // Transfer rental fee
-        require(paymentToken.transferFrom(msg.sender, owner(), rentalFee), "Token transfer failed");
+
+        uint256 totalFee = _rentalDuration * rentalFee;
+        // calculate platform fee
+        uint256 platformFee = totalFee * platformFeeBPS / 10000;
+        // calculate titleOwner fee
+        uint256 titleOwnerFee = totalFee - platformFee;
+        // Transfer platform fee
+        paymentToken.transferFrom(msg.sender, owner(), platformFee); //TODO: Use safeTransferFrom
+        // Transfer titleOwner fee
+        paymentToken.transferFrom(msg.sender, title.owner, titleOwnerFee);
         
         Rental memory rental = Rental(msg.sender, _index, block.timestamp + _rentalDuration);
         rentals.push(rental);
-        
-        emit TitleRented(_index, msg.sender, block.timestamp + _rentalDuration);
     }
 
     // Owner functions to configure payment settings
     function setPaymentToken(address _tokenAddress) external onlyOwner {
         require(_tokenAddress != address(0), "Invalid token address");
         paymentToken = IERC20(_tokenAddress);
-        emit PaymentTokenUpdated(_tokenAddress);
     }
 
+    // rentalFee = fee per rental second per title
     function setRentalFee(uint256 _fee) external onlyOwner {
         require(_fee > 0, "Fee must be greater than 0");
+        // ggf. obergrenze festsetzen
         rentalFee = _fee;
-        emit RentalFeeUpdated(_fee);
     }
+
+    function setPlatformFeeBPS(uint256 _fee) external onlyOwner {
+        require(_fee > 0, "Fee must be greater than 0");
+        require(_fee <= 10000, "Fee must be less than or equal to 100%");
+        platformFeeBPS = _fee;
+    }
+        
+
 }
+
+
+/*
+titles[0]  = Title("Kerstins Song", "author", 10, msg.sender);j
+titles[1]  = Title("Svens Song", "author", 10, msg.sender);j
+rentals[0] = Rental(0xkerstin, 1, 1123123310);
+*/
