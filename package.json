@@ -1,0 +1,21 @@
+{
+  "name": "thesis",
+  "version": "1.0.0",
+  "description": "TimeBoundBeats - Music NFT Rental Platform",
+  "main": "index.js",
+  "scripts": {
+    "anvil": "anvil --host 0.0.0.0 --port 8545 --chain-id 31337",
+    "deploy:local": "cd contracts && forge script script/DeployTimeBoundBeats.s.sol:DeployTimeBoundBeats --rpc-url http://localhost:8545 --broadcast",
+    "compile": "cd contracts && forge build",
+    "test:contracts": "cd contracts && forge test",
+    "dev:setup": "cd contracts && cp .env.example .env && cd .. && npm run anvil",
+    "dev:full": "concurrently \"npm run anvil\" \"sleep 5 && npm run deploy:local\" \"cd frontend && npm start\"",
+    "frontend": "cd frontend && npm start"
+  },
+  "keywords": ["nft", "music", "rental", "blockchain", "arbitrum"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

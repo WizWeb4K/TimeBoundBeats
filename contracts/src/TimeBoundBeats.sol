@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 struct TitleMetadata {
     string name;
@@ -44,9 +44,8 @@ contract TimeBoundBeats is ERC721Enumerable, Ownable {
     event RentalFeeUpdated(uint256 newFee);
     event TitleRented(uint256 indexed tokenId, address indexed renter, uint256 rentedUntil);
 
-    constructor() ERC721("TimeBoundBeatsNFT", "TBB") {}
+    constructor() ERC721("TimeBoundBeatsNFT", "TBB") Ownable(msg.sender){}
     // Override required functions by both parent contracts
-    }
     
     // Mint a new title NFT
     function mintTitle(string memory _name, string memory _author, uint256 _duration) public {
@@ -80,13 +79,14 @@ contract TimeBoundBeats is ERC721Enumerable, Ownable {
     
     // Get title metadata
     function getTitleMetadata(uint256 _tokenId) public view returns (TitleMetadata memory) {
-        require(_exists(_tokenId), "Token does not exist");
+        // ownerOf will revert if token doesn't exist, so no need for explicit check
+        ownerOf(_tokenId);
         return titleMetadata[_tokenId];
     }
     
     // Rent a title
     function rentTitle(uint256 _tokenId, uint256 _rentalDuration) public {
-        require(_exists(_tokenId), "Token does not exist");
+        // ownerOf will revert if token doesn't exist, so no need for explicit check
         require(ownerOf(_tokenId) != msg.sender, "You are the owner of this title");
         require(paymentToken != IERC20(address(0)), "Payment token not configured");
         
