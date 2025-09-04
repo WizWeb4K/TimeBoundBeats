@@ -1,0 +1,573 @@
+/* OpenSea-inspired Marketplace Styles */
+
+.marketplace-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Notification System */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-info {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  color: #0d47a1;
+}
+
+.notification-success {
+  background: #e8f5e8;
+  border-left: 4px solid #4caf50;
+  color: #1b5e20;
+}
+
+.notification-warning {
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  color: #e65100;
+}
+
+.notification-error {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+  color: #b71c1c;
+}
+
+.notification-message {
+  flex: 1;
+  font-weight: 500;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  margin-left: 1rem;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.marketplace-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.marketplace-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #04111d;
+  margin-bottom: 0.5rem;
+}
+
+.marketplace-subtitle {
+  font-size: 1.1rem;
+  color: #707a83;
+  margin: 0;
+}
+
+/* NFT Grid Layout */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* NFT Card */
+.nft-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nft-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #2081e2;
+}
+
+/* NFT Image */
+.nft-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.nft-card.owned {
+  border-color: #10b981;
+}
+
+.nft-card.owned:hover {
+  border-color: #059669;
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.2);
+}
+
+.rental-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(251, 146, 60, 0.9);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rental-badge.active {
+  background: rgba(34, 197, 94, 0.9);
+}
+
+.rental-badge.expired {
+  background: rgba(107, 114, 128, 0.9);
+}
+
+.nft-card.rented {
+  border-color: #f59e0b;
+}
+
+.nft-card.rented:hover {
+  border-color: #d97706;
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.2);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #04111d;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #707a83;
+  margin: 0;
+}
+
+.rental-info {
+  border-top: 1px solid #e5e8eb;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.rental-expires {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rental-expires strong {
+  font-size: 0.85rem;
+  color: #707a83;
+}
+
+.expiry-date {
+  font-size: 0.9rem;
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.nft-placeholder {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* NFT Content */
+.nft-content {
+  padding: 1.25rem;
+}
+
+.nft-info {
+  margin-bottom: 1rem;
+}
+
+.nft-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #04111d;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.nft-author {
+  font-size: 0.9rem;
+  color: #707a83;
+  margin: 0 0 0.75rem 0;
+}
+
+.nft-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.nft-price {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.nft-price strong {
+  color: #059669;
+  font-size: 1rem;
+}
+
+.nft-duration {
+  font-size: 0.85rem;
+  color: #707a83;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.nft-token {
+  font-size: 0.85rem;
+  color: #2081e2;
+  font-weight: 500;
+}
+
+/* Rental Section */
+.nft-rental {
+  border-top: 1px solid #e5e8eb;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rental-input {
+  border: 1px solid #e5e8eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.rental-input:focus {
+  border-color: #2081e2;
+  box-shadow: 0 0 0 3px rgba(32, 129, 226, 0.1);
+}
+
+.rent-button {
+  background: #2081e2;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.rent-button:hover {
+  background: #1c72d1;
+  transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #707a83;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: #04111d;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+/* Marketplace Controls */
+.marketplace-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  border: 1px solid #e5e8eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  border-color: #2081e2;
+  box-shadow: 0 0 0 3px rgba(32, 129, 226, 0.1);
+}
+
+.cart-button {
+  border-color: #2081e2;
+  color: #2081e2;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.cart-button:hover {
+  background-color: #2081e2;
+  color: white;
+}
+
+/* Shopping Cart */
+.shopping-cart {
+  background: #fff;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e8eb;
+  background: #f8f9fa;
+}
+
+.cart-header h3 {
+  margin: 0;
+  color: #04111d;
+}
+
+.cart-items {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-info {
+  flex: 1;
+}
+
+.cart-summary {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e8eb;
+}
+
+.rental-period {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.rental-period label {
+  font-weight: 600;
+  color: #04111d;
+  white-space: nowrap;
+}
+
+.days-input {
+  width: 100px;
+  border: 1px solid #e5e8eb;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.price-display {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e5e8eb;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.checkout-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* NFT Actions */
+.nft-actions {
+  border-top: 1px solid #e5e8eb;
+  padding-top: 1rem;
+}
+
+.add-to-cart-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .marketplace-container {
+    padding: 1rem;
+  }
+  
+  .marketplace-title {
+    font-size: 2rem;
+  }
+  
+  .marketplace-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-container {
+    max-width: none;
+  }
+  
+  .nft-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  
+  .nft-image {
+    height: 160px;
+  }
+  
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .rental-period {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Tab grouping styles for Artists vs Renters */
+.nav-tabs .nav-link {
+  border-radius: 8px 8px 0 0;
+  margin-right: 8px;
+  font-weight: 500;
+  padding: 12px 20px;
+}
+
+/* Renter tabs (first two) - blue theme */
+.nav-tabs .nav-item:nth-child(1) .nav-link,
+.nav-tabs .nav-item:nth-child(2) .nav-link {
+  border-bottom-color: #3b82f6;
+}
+
+.nav-tabs .nav-item:nth-child(1) .nav-link.active,
+.nav-tabs .nav-item:nth-child(2) .nav-link.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Artist tabs (last two) - purple theme */
+.nav-tabs .nav-item:nth-child(3) .nav-link,
+.nav-tabs .nav-item:nth-child(4) .nav-link {
+  border-bottom-color: #8b5cf6;
+}
+
+.nav-tabs .nav-item:nth-child(3) .nav-link.active,
+.nav-tabs .nav-item:nth-child(4) .nav-link.active {
+  background-color: #8b5cf6;
+  color: white;
+  border-color: #8b5cf6;
+}
+
+/* Visual separator between user groups */
+.nav-tabs .nav-item:nth-child(2) {
+  margin-right: 24px;
+  position: relative;
+}
+
+.nav-tabs .nav-item:nth-child(2)::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 20px;
+  background-color: #dee2e6;
+}

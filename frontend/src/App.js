@@ -11,6 +11,11 @@ function App() {
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
   const [account, setAccount] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const triggerRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <Container className="mt-5">
@@ -28,17 +33,17 @@ function App() {
         </Col>
       </Row>
       <Tabs defaultActiveKey="marketplace" id="main-tabs" className="mb-3">
-        <Tab eventKey="marketplace" title="Marketplace">
-          <Marketplace provider={provider} signer={signer} account={account} />
+        <Tab eventKey="marketplace" title="🎧 Marketplace">
+          <Marketplace provider={provider} signer={signer} account={account} refreshTrigger={refreshTrigger} />
         </Tab>
-        <Tab eventKey="mint" title="Mint">
-          <Mint signer={signer} />
+        <Tab eventKey="my-rentals" title="📜 My Rentals">
+          <MyRentals provider={provider} signer={signer} account={account} refreshTrigger={refreshTrigger} />
         </Tab>
-        <Tab eventKey="my-titles" title="My Titles">
-          <MyTitles provider={provider} signer={signer} account={account} />
+        <Tab eventKey="mint" title="🎤 Mint Titles">
+          <Mint signer={signer} onMintSuccess={triggerRefresh} />
         </Tab>
-        <Tab eventKey="my-rentals" title="My Rentals">
-          <MyRentals provider={provider} signer={signer} account={account} />
+        <Tab eventKey="my-titles" title="🎵 My Titles">
+          <MyTitles provider={provider} signer={signer} account={account} refreshTrigger={refreshTrigger} />
         </Tab>
       </Tabs>
     </Container>

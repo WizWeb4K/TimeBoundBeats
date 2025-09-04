@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { Card, ListGroup } from 'react-bootstrap';
 import contractABI from '../contracts/TimeBoundBeats.json';
 import deploymentAddresses from '../contracts/deployment.json';
+import '../styles/marketplace.css';
 
 const contractAddress = deploymentAddresses.TimeBoundBeats;
 const abi = contractABI.abi;
 
-const MyTitles = ({ provider, signer, account }) => {
+const MyTitles = ({ provider, signer, account, refreshTrigger }) => {
   const [titles, setTitles] = useState([]);
 
   useEffect(() => {
@@ -57,25 +57,65 @@ const MyTitles = ({ provider, signer, account }) => {
     };
 
     fetchTitles();
-  }, [provider, signer, account]);
+  }, [provider, signer, account, refreshTrigger]);
+
+  // Show connect wallet prompt if no account connected
+  if (!account) {
+    return (
+      <div className="my-titles-container">
+        <div className="section-header">
+          <h2 className="section-title">My Titles</h2>
+          <p className="section-subtitle">Music titles you own</p>
+        </div>
+        
+        <div className="empty-state">
+          <div className="empty-icon">🔗</div>
+          <h3>Connect Your Wallet</h3>
+          <p>Connect your wallet to view your owned music titles</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Card className="mt-4">
-      <Card.Body>
-        <Card.Title>My Titles</Card.Title>
-        {titles.length > 0 ? (
-          <ListGroup>
-            {titles.map((title) => (
-              <ListGroup.Item key={title.tokenId.toString()}>
-                <strong>{title.name}</strong> by {title.author} (Duration: {title.duration.toString()}s)
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        ) : (
-          <p>You don't own any titles yet.</p>
-        )}
-      </Card.Body>
-    </Card>
+    <div className="my-titles-container">
+      <div className="section-header">
+        <h2 className="section-title">My Titles</h2>
+        <p className="section-subtitle">Music titles you own</p>
+      </div>
+      
+      {titles.length > 0 ? (
+        <div className="nft-grid">
+          {titles.map((title) => (
+            <div key={title.tokenId} className="nft-card owned">
+              <div className="nft-image">
+                <div className="nft-placeholder">
+                  🎵
+                </div>
+                <div className="owner-badge">Owned</div>
+              </div>
+              
+              <div className="nft-content">
+                <div className="nft-info">
+                  <h4 className="nft-title">{title.name}</h4>
+                  <p className="nft-author">by {title.author}</p>
+                  <div className="nft-details">
+                    <span className="nft-duration">Duration: {title.duration}s</span>
+                    <span className="nft-token">#{title.tokenId}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon">🎼</div>
+          <h3>No titles owned</h3>
+          <p>Mint your first music title to get started!</p>
+        </div>
+      )}
+    </div>
   );
 };
 
