@@ -3,7 +3,7 @@
   "network": "Sepolia Testnet",
   "contracts": {
     "TimeBoundBeats": "0x06a2A3Ae5FB0410F2A9019F9853Df900e6BCEb0D",
-    "PaymentToken": "0x3aAA12F45c281DDcaa123612483Dc159c2CEc6B7"
+    "PaymentToken": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
   },
   "config": {
     "rentalFee": 12,

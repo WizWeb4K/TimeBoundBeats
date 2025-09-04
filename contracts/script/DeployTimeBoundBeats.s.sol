@@ -12,8 +12,8 @@ contract DeployTimeBoundBeats is Script {
     function setUp() public {
         // Mainnet USDC
         usdcAddresses[1] = 0xa0b86a33e6441B0d88d3c2f71c5c27Bd4d3bc0EF;
-        // Sepolia - no official USDC, will use MockUSDC
-        usdcAddresses[11155111] = address(0);
+        // Sepolia USDC
+        usdcAddresses[11155111] = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
         // Arbitrum One USDC
         usdcAddresses[42161] = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
         // Polygon USDC
@@ -91,7 +91,10 @@ contract DeployTimeBoundBeats is Script {
             }
         }
         
-        // Save deployment addresses to file for frontend
+        // Save deployment addresses to network-specific file for frontend
+        string memory networkName = getNetworkSlug(chainId);
+        string memory fileName = string(abi.encodePacked("deployments-", networkName, ".json"));
+        
         string memory deploymentInfo = string(abi.encodePacked(
             '{\n',
             '  "chainId": ', vm.toString(chainId), ',\n',
@@ -103,12 +106,14 @@ contract DeployTimeBoundBeats is Script {
             '  "config": {\n',
             '    "rentalFee": 12,\n',
             '    "platformFeeBPS": 30\n',
-            '  }\n',
+            '  },\n',
+            '  "timestamp": ', vm.toString(block.timestamp), ',\n',
+            '  "deployer": "', vm.toString(vm.addr(deployerPrivateKey)), '"\n',
             '}'
         ));
         
-        vm.writeFile("deployments.json", deploymentInfo);
-        console.log("\nDeployment info saved to deployments.json");
+        vm.writeFile(fileName, deploymentInfo);
+        console.log(string(abi.encodePacked("\nDeployment info saved to ", fileName)));
     }
     
     function distributeToAnvilAddresses(MockUSDC mockUSDC) internal {
@@ -142,5 +147,16 @@ contract DeployTimeBoundBeats is Script {
         if (chainId == 10) return "Optimism";
         if (chainId == 31337) return "Local Anvil";
         return "Unknown Network";
+    }
+    
+    function getNetworkSlug(uint256 chainId) internal pure returns (string memory) {
+        if (chainId == 1) return "mainnet";
+        if (chainId == 11155111) return "sepolia";
+        if (chainId == 5) return "goerli";
+        if (chainId == 137) return "polygon";
+        if (chainId == 42161) return "arbitrum";
+        if (chainId == 10) return "optimism";
+        if (chainId == 31337) return "anvil";
+        return "unknown";
     }
 }

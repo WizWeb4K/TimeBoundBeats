@@ -3,3 +3,6 @@ forge-lock.json
 cache
 broadcast
 .env
+
+# Keep deployment files for reference, but you may want to gitignore some
+# deployments-*.json
