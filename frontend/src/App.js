@@ -7,7 +7,7 @@ import MyTitles from './components/MyTitles';
 import MyRentals from './components/MyRentals';
 import Marketplace from './components/Marketplace';
 import NetworkSwitcher from './components/NetworkSwitcher';
-import { NETWORKS, getNetworkByChainId, getContractAddresses, loadLocalDeployment } from './config/networks';
+import { NETWORKS, getContractAddresses, loadLocalDeployment } from './config/networks';
 
 function App() {
   const [provider, setProvider] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Form, Badge, Container, Row, Col, InputGroup } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import { ethers } from 'ethers';
 import contractABI from '../contracts/TimeBoundBeats.json';
 import IERC20ABI from '../contracts/IERC20.json';
@@ -123,7 +123,7 @@ const Marketplace = ({ provider, signer, account, refreshTrigger, contractAddres
     } catch (error) {
       console.error('Error fetching all titles:', error);
     }
-  }, [contractAddresses?.TimeBoundBeats, provider]);
+  }, [contractAddresses?.TimeBoundBeats, provider, account]);
 
   useEffect(() => {
     fetchAllTitles();
