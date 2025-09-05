@@ -1,45 +1,88 @@
 // Network configuration for TimeBoundBeats DApp
 export const NETWORKS = {
   local: {
-    name: 'Local Anvil (Arbitrum Fork)',
+    name: 'Local Anvil',
+    shortName: 'Local',
     chainId: 31337,
     rpcUrl: 'http://localhost:8545',
+    logo: 'local',
+    color: '#f59e0b',
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
       decimals: 18,
     },
     blockExplorer: null, // No block explorer for local network
+    contracts: {
+      // These will be loaded from deployment.json for local
+      TimeBoundBeats: null,
+      PaymentToken: null
+    }
   },
-  arbitrum: {
-    name: 'Arbitrum One',
-    chainId: 42161,
-    rpcUrl: 'https://arbitrum-one.publicnode.com',
+  sepolia: {
+    name: 'Sepolia Testnet',
+    shortName: 'Sepolia',
+    chainId: 11155111,
+    rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/demo', // Public RPC
+    logo: 'ethereum',
+    color: '#627eea',
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
       decimals: 18,
     },
-    blockExplorer: 'https://arbiscan.io',
+    blockExplorer: 'https://sepolia.etherscan.io',
+    contracts: {
+      TimeBoundBeats: '0x06a2A3Ae5FB0410F2A9019F9853Df900e6BCEb0D',
+      PaymentToken: '0x3aAA12F45c281DDcaa123612483Dc159c2CEc6B7'
+    }
   }
 };
 
 // Default network for development
-export const DEFAULT_NETWORK = NETWORKS.local;
+export const DEFAULT_NETWORK = NETWORKS.sepolia;
 
-// Contract addresses will be loaded from deployment.json
-export const loadContractAddresses = async () => {
+// Get network configuration by chain ID
+export const getNetworkByChainId = (chainId) => {
+  const networkKey = Object.keys(NETWORKS).find(key => NETWORKS[key].chainId === chainId);
+  return networkKey ? NETWORKS[networkKey] : null;
+};
+
+// Get contract addresses for a specific network
+export const getContractAddresses = (networkKey) => {
+  console.log('getContractAddresses called with:', networkKey);
+  console.log('Available networks:', Object.keys(NETWORKS));
+  
+  const network = NETWORKS[networkKey];
+  console.log('Found network:', network);
+  
+  if (!network) {
+    console.warn(`Network ${networkKey} not found`);
+    return null;
+  }
+  
+  console.log('Returning contracts:', network.contracts);
+  return network.contracts;
+};
+
+// Load contract addresses for local network from deployment.json
+export const loadLocalDeployment = async () => {
   try {
     const response = await fetch('/contracts/deployment.json');
+    if (!response.ok) {
+      throw new Error('deployment.json not found');
+    }
     const deployment = await response.json();
-    return deployment;
+    return {
+      TimeBoundBeats: deployment.TimeBoundBeats,
+      PaymentToken: deployment.PaymentToken
+    };
   } catch (error) {
-    console.warn('Could not load deployment.json, using placeholder addresses');
+    console.log('Local deployment.json not found - using placeholder addresses');
+    // Return placeholder addresses for local development
     return {
       TimeBoundBeats: '0x0000000000000000000000000000000000000000',
-      MockUSDC: '0x0000000000000000000000000000000000000000',
-      network: 'local',
-      chainId: 31337
+      PaymentToken: '0x0000000000000000000000000000000000000000'
     };
   }
 };

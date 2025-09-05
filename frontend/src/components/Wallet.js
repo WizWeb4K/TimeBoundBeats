@@ -141,7 +141,7 @@ const Wallet = ({ setProvider, setSigner, setAccount, account }) => {
   }, [connectWallet, disconnectWallet]);
 
   return (
-    <div className="d-flex justify-content-end mb-3">
+    <div className="d-flex justify-content-end align-items-center">
       {account ? (
         <ButtonGroup>
           <Button variant="outline-success" disabled>

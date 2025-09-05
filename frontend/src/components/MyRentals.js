@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../contracts/TimeBoundBeats.json';
-import deploymentAddresses from '../contracts/deployment.json';
 import '../styles/marketplace.css';
 
-const contractAddress = deploymentAddresses.TimeBoundBeats;
 const abi = contractABI.abi;
 
-const MyRentals = ({ provider, signer, account, refreshTrigger }) => {
+const MyRentals = ({ provider, signer, account, refreshTrigger, contractAddresses }) => {
   const [rentals, setRentals] = useState([]);
 
   useEffect(() => {
     const fetchRentals = async () => {
-      if (provider && signer && account) {
+      if (provider && signer && account && contractAddresses?.TimeBoundBeats) {
         try {
-          const contract = new ethers.Contract(contractAddress, abi, signer);
+          const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, signer);
           const userRentals = [];
           
           // Get rentals by iterating through the public rentals array
@@ -71,7 +69,7 @@ const MyRentals = ({ provider, signer, account, refreshTrigger }) => {
     };
 
     fetchRentals();
-  }, [provider, signer, account, refreshTrigger]);
+  }, [provider, signer, account, refreshTrigger, contractAddresses]);
 
   // Show connect wallet prompt if no account connected
   if (!account) {

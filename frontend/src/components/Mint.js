@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { Form, Button, Card } from 'react-bootstrap';
 import contractABI from '../contracts/TimeBoundBeats.json';
-import deploymentAddresses from '../contracts/deployment.json';
-import '../styles/marketplace.css';
 
-const contractAddress = deploymentAddresses.TimeBoundBeats;
 const abi = contractABI.abi;
 
-const Mint = ({ signer, onMintSuccess }) => {
+const Mint = ({ signer, onMintSuccess, contractAddresses }) => {
   const [name, setName] = useState('');
   const [author, setAuthor] = useState('');
   const [duration, setDuration] = useState('');
@@ -22,29 +19,51 @@ const Mint = ({ signer, onMintSuccess }) => {
 
   const handleMint = async (e) => {
     e.preventDefault();
+    
     if (!signer) {
-      showNotification('Please connect your wallet first.', 'warning');
+      showNotification('Please connect your wallet first', 'error');
+      return;
+    }
+
+    console.log('Mint: Contract addresses received:', contractAddresses);
+    console.log('Mint: TimeBoundBeats address:', contractAddresses?.TimeBoundBeats);
+
+    if (!contractAddresses?.TimeBoundBeats) {
+      showNotification('Contract addresses not loaded yet', 'error');
+      console.error('Mint: Contract addresses missing or TimeBoundBeats address is null/undefined');
+      return;
+    }
+
+    if (contractAddresses.TimeBoundBeats === '0x0000000000000000000000000000000000000000') {
+      showNotification('Invalid contract address (zero address)', 'error');
+      console.error('Mint: Contract address is zero address');
       return;
     }
 
     setIsLoading(true);
     try {
       showNotification('Creating new title...', 'info');
-      const contract = new ethers.Contract(contractAddress, abi, signer);
+      console.log('Mint: Creating contract with address:', contractAddresses.TimeBoundBeats);
+      const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, signer);
+      console.log('Mint: Contract created, calling mintTitle with:', { name, author, duration });
       const transaction = await contract.mintTitle(name, author, duration);
+      console.log('Mint: Transaction sent:', transaction.hash);
       await transaction.wait();
+      console.log('Mint: Transaction confirmed');
       showNotification('Title minted successfully!', 'success');
+      
+      // Reset form
       setName('');
       setAuthor('');
       setDuration('');
       
-      // Trigger refresh of all components
+      // Notify parent to refresh data
       if (onMintSuccess) {
         onMintSuccess();
       }
     } catch (error) {
       console.error('Error minting title:', error);
-      showNotification('Error minting title. Please try again.', 'error');
+      showNotification(`Error: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }

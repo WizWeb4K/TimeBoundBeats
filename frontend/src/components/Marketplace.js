@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Button, Form, Badge, Container, Row, Col, InputGroup } from 'react-bootstrap';
 import { ethers } from 'ethers';
-import { Form, Button } from 'react-bootstrap';
 import contractABI from '../contracts/TimeBoundBeats.json';
-import deploymentAddresses from '../contracts/deployment.json';
 import IERC20ABI from '../contracts/IERC20.json';
 import '../styles/marketplace.css';
 
-const contractAddress = deploymentAddresses.TimeBoundBeats;
 const abi = contractABI.abi;
+const erc20Abi = IERC20ABI.abi;
 
-const Marketplace = ({ provider, signer, account, refreshTrigger }) => {
+const Marketplace = ({ provider, signer, account, refreshTrigger, contractAddresses }) => {
   const [allTitles, setAllTitles] = useState([]);
   const [filteredTitles, setFilteredTitles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,70 +51,106 @@ const Marketplace = ({ provider, signer, account, refreshTrigger }) => {
     setCart(cart.filter(item => item.tokenId !== tokenId));
   };
 
-  const fetchAllTitles = async () => {
-    // Create a read-only provider if none exists (for wallet-less browsing)
-    let readProvider = provider;
-    if (!provider && window.ethereum) {
-      try {
-        readProvider = new ethers.BrowserProvider(window.ethereum);
-      } catch (error) {
-        console.log('Unable to create read-only provider');
-        return;
-      }
-    } else if (!provider && !window.ethereum) {
-      console.log('No wallet or provider available');
+  const fetchAllTitles = useCallback(async () => {
+    // Don't fetch if contract addresses aren't loaded yet
+    if (!contractAddresses?.TimeBoundBeats) {
+      console.log('Contract addresses not loaded yet');
       return;
     }
 
-    if (readProvider) {
-      try {
-        const contract = new ethers.Contract(contractAddress, abi, readProvider);
-        const totalSupply = await contract.totalSupply();
-        
-        // Fetch rental fee for price calculation
-        const rentalFee = await contract.rentalFee();
-        const dailyPrice = Number(rentalFee) * 24 * 60 * 60; // Convert per-second fee to per-day
-        setPricePerDay(dailyPrice);
-        
-        const titlesData = await Promise.all(
-          [...Array(Number(totalSupply)).keys()].map(async (i) => {
-            const tokenId = await contract.tokenByIndex(i);
-            const metadata = await contract.getTitleMetadata(tokenId);
-            const owner = await contract.ownerOf(tokenId);
-            return { 
-              tokenId: Number(tokenId),
-              owner, 
-              name: metadata[0],
-              author: metadata[1],  
-              duration: Number(metadata[2]),
-              pricePerDay: dailyPrice
-            };
-          })
-        );
-        
-        // Filter out user's own titles only if wallet is connected
-        const availableTitles = account 
-          ? titlesData.filter(title => title.owner.toLowerCase() !== account.toLowerCase())
-          : titlesData; // Show all titles if no wallet connected
+    // Create a read-only provider if wallet is not connected
+    if (!provider && !window.ethereum) {
+      return;
+    }
+
+    try {
+      // Use provider for read-only operations
+      const readOnlyProvider = provider || new ethers.JsonRpcProvider('https://eth-sepolia.g.alchemy.com/v2/demo');
+      console.log('Using contract address:', contractAddresses.TimeBoundBeats);
+      console.log('Using provider network:', await readOnlyProvider.getNetwork());
+      
+      // First verify the contract exists at this address
+      const code = await readOnlyProvider.getCode(contractAddresses.TimeBoundBeats);
+      console.log('Contract code length:', code.length);
+      if (code === '0x') {
+        throw new Error(`No contract deployed at address ${contractAddresses.TimeBoundBeats} on current network`);
+      }
+      
+      const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, readOnlyProvider);
+      
+      // Get rental fee from contract for price display
+      const rentalFee = await contract.rentalFee();
+      const dailyPrice = Number(rentalFee) * 24 * 60 * 60; // rentalFee is per second, convert to per day
+      setPricePerDay(dailyPrice);
+      console.log('Rental fee per second:', rentalFee.toString());
+      console.log('Daily price:', dailyPrice);
+      
+      // Get total supply
+      const totalSupply = await contract.totalSupply();
+      console.log('Total supply:', totalSupply.toString());
+      const allTitles = [];
+
+      // Fetch titles
+      for (let i = 0; i < totalSupply; i++) {
+        try {
+          const tokenId = await contract.tokenByIndex(i);
+          const metadata = await contract.titleMetadata(tokenId);
+          const owner = await contract.ownerOf(tokenId);
           
+          // Show all titles except the ones owned by current user (if logged in)
+          const isRentable = !account || owner.toLowerCase() !== account.toLowerCase();
+          
+          if (isRentable) {
+            allTitles.push({
+              tokenId: Number(tokenId),
+              name: metadata.name,
+              author: metadata.author,
+              duration: Number(metadata.duration),
+              owner: owner
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching title ${i}:`, error);
+        }
+      }
+
+      const availableTitles = allTitles.filter(title => title);
+      if (availableTitles.length > 0) {
+        console.log(`Found ${availableTitles.length} available titles for rental`);
         setAllTitles(availableTitles);
         setFilteredTitles(availableTitles);
-      } catch (error) {
-        console.error('Error fetching all titles:', error);
       }
+    } catch (error) {
+      console.error('Error fetching all titles:', error);
     }
-  };
+  }, [contractAddresses?.TimeBoundBeats, provider]);
 
   useEffect(() => {
     fetchAllTitles();
-  }, [provider, account, refreshTrigger]);
+  }, [fetchAllTitles]); // Remove refreshTrigger and contractAddresses to fix dependency warning
 
   useEffect(() => {
     const calcPrice = async () => {
-      if (cart.length === 0 || !provider) return;
+      if (cart.length === 0 || !provider || !contractAddresses?.TimeBoundBeats) return;
       
       try {
-        const contract = new ethers.Contract(contractAddress, abi, provider);
+        console.log('Fetching all titles from contract...');
+        console.log('Using contract address:', contractAddresses.TimeBoundBeats);
+        console.log('Using provider:', provider);
+        
+        const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, provider);
+        console.log('Contract instance created');
+        
+        // First verify the contract exists at this address
+        const code = await provider.getCode(contractAddresses.TimeBoundBeats);
+        console.log('Contract code length:', code.length);
+        if (code === '0x') {
+          throw new Error(`No contract deployed at address ${contractAddresses.TimeBoundBeats}`);
+        }
+        
+        const totalSupply = await contract.totalSupply();
+        console.log('Total supply:', totalSupply.toString());
+        
         const rentalFee = await contract.rentalFee();
         const daysInSeconds = rentalDays * 24 * 60 * 60;
         const total = cart.length * Number(rentalFee) * daysInSeconds;
@@ -124,34 +159,77 @@ const Marketplace = ({ provider, signer, account, refreshTrigger }) => {
         console.error('Error calculating price:', error);
       }
     };
+
     calcPrice();
-  }, [cart, rentalDays, provider]);
+  }, [cart, rentalDays, provider, contractAddresses?.TimeBoundBeats]);
 
   const handleBatchRental = async () => {
     if (!signer) {
       showNotification('Please connect your wallet first.', 'warning');
       return;
     }
+    
     if (cart.length === 0) {
-      showNotification('Please add titles to cart first.', 'warning');
+      showNotification('Your cart is empty.', 'warning');
+      return;
+    }
+
+    if (!contractAddresses?.TimeBoundBeats) {
+      showNotification('Contract addresses not loaded yet', 'error');
       return;
     }
 
     setIsLoading(true);
     try {
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const paymentTokenAddress = await contract.paymentToken();
-      const paymentToken = new ethers.Contract(paymentTokenAddress, IERC20ABI.abi, signer);
+      console.log('Starting rental transaction on Sepolia...');
+      console.log('Contract addresses:', contractAddresses);
+      console.log('Account:', account);
+      console.log('Cart:', cart);
+      console.log('Rental days:', rentalDays);
+      console.log('Total price:', totalPrice);
+
+      const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, signer);
+      console.log('Created contract instance');
+
+      const paymentToken = await contract.paymentToken();
+      console.log('Payment token address:', paymentToken);
+      
+      const erc20Contract = new ethers.Contract(paymentToken, erc20Abi, signer);
+      console.log('Created ERC20 contract instance');
       
       const daysInSeconds = rentalDays * 24 * 60 * 60;
       const tokenIds = cart.map(item => item.tokenId);
+      console.log('Token IDs to rent:', tokenIds);
+      console.log('Duration in seconds:', daysInSeconds);
+
+      // Check user's payment token balance
+      const balance = await erc20Contract.balanceOf(account);
+      console.log('User balance:', ethers.formatUnits(balance, 6), 'USDC');
+      console.log('Required amount:', ethers.formatUnits(totalPrice, 6), 'USDC');
+
+      if (balance < totalPrice) {
+        throw new Error(`Insufficient balance. You have ${ethers.formatUnits(balance, 6)} USDC but need ${ethers.formatUnits(totalPrice, 6)} USDC`);
+      }
       
       // Check allowance
-      const allowance = await paymentToken.allowance(account, contractAddress);
+      const allowance = await erc20Contract.allowance(account, contractAddresses.TimeBoundBeats);
+      console.log('Current allowance:', ethers.formatUnits(allowance, 6), 'USDC');
+      
       if (allowance < totalPrice) {
-        showNotification(`Approving ${ethers.formatUnits(totalPrice, 6)} MockUSDC spending...`, 'info');
-        const approvalTx = await paymentToken.approve(contractAddress, totalPrice);
-        await approvalTx.wait();
+        showNotification(`Approving ${ethers.formatUnits(totalPrice, 6)} USDC spending...`, 'info');
+        console.log('Sending approval transaction...');
+        
+        // Estimate gas for approval
+        const approvalGasEstimate = await erc20Contract.approve.estimateGas(contractAddresses.TimeBoundBeats, totalPrice);
+        console.log('Approval gas estimate:', approvalGasEstimate.toString());
+        
+        const approvalTx = await erc20Contract.approve(contractAddresses.TimeBoundBeats, totalPrice, {
+          gasLimit: approvalGasEstimate * 120n / 100n // Add 20% buffer
+        });
+        console.log('Approval transaction sent:', approvalTx.hash);
+        
+        const approvalReceipt = await approvalTx.wait();
+        console.log('Approval confirmed in block:', approvalReceipt.blockNumber);
         showNotification('Approval successful! Processing rental...', 'success');
       }
       
@@ -159,20 +237,52 @@ const Marketplace = ({ provider, signer, account, refreshTrigger }) => {
       let transaction;
       if (cart.length > 1) {
         showNotification(`Processing batch rental for ${cart.length} titles...`, 'info');
-        transaction = await contract.rentTitleBatch(tokenIds, daysInSeconds);
+        console.log('Estimating gas for batch rental...');
+        
+        const gasEstimate = await contract.rentTitleBatch.estimateGas(tokenIds, daysInSeconds);
+        console.log('Batch rental gas estimate:', gasEstimate.toString());
+        
+        transaction = await contract.rentTitleBatch(tokenIds, daysInSeconds, {
+          gasLimit: gasEstimate * 120n / 100n // Add 20% buffer
+        });
       } else {
         showNotification('Processing rental...', 'info');
-        transaction = await contract.rentTitle(tokenIds[0], daysInSeconds);
+        console.log('Estimating gas for single rental...');
+        
+        const gasEstimate = await contract.rentTitle.estimateGas(tokenIds[0], daysInSeconds);
+        console.log('Single rental gas estimate:', gasEstimate.toString());
+        
+        transaction = await contract.rentTitle(tokenIds[0], daysInSeconds, {
+          gasLimit: gasEstimate * 120n / 100n // Add 20% buffer
+        });
       }
       
-      await transaction.wait();
+      console.log('Rental transaction sent:', transaction.hash);
+      const receipt = await transaction.wait();
+      console.log('Rental confirmed in block:', receipt.blockNumber);
+      
       showNotification(`Successfully rented ${cart.length} title(s) for ${rentalDays} day(s)!`, 'success');
       setCart([]);
       setShowCart(false);
       fetchAllTitles();
     } catch (error) {
-      console.error('Error renting titles:', error);
-      showNotification('Error processing rental. Please try again.', 'error');
+      console.error('Detailed error renting titles:', error);
+      
+      let errorMessage = 'Error processing rental. Please try again.';
+      
+      if (error.message.includes('insufficient funds')) {
+        errorMessage = 'Insufficient ETH for gas fees. Please add ETH to your wallet.';
+      } else if (error.message.includes('user rejected')) {
+        errorMessage = 'Transaction was rejected by user.';
+      } else if (error.message.includes('Insufficient balance')) {
+        errorMessage = error.message;
+      } else if (error.reason) {
+        errorMessage = `Transaction failed: ${error.reason}`;
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      showNotification(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -261,7 +371,7 @@ const Marketplace = ({ provider, signer, account, refreshTrigger }) => {
                 </div>
                 
                 <div className="price-display">
-                  <strong>Total Price: {ethers.formatUnits(totalPrice, 6)} MockUSDC</strong>
+                  <strong>Total Price: {ethers.formatUnits(totalPrice, 6)} USDC</strong>
                 </div>
                 
                 <Button 

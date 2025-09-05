@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../contracts/TimeBoundBeats.json';
-import deploymentAddresses from '../contracts/deployment.json';
 import '../styles/marketplace.css';
 
-const contractAddress = deploymentAddresses.TimeBoundBeats;
 const abi = contractABI.abi;
 
-const MyTitles = ({ provider, signer, account, refreshTrigger }) => {
+const MyTitles = ({ provider, signer, account, refreshTrigger, contractAddresses }) => {
   const [titles, setTitles] = useState([]);
 
   useEffect(() => {
     const fetchTitles = async () => {
-      if (provider && signer && account) {
+      if (provider && signer && account && contractAddresses?.TimeBoundBeats) {
         try {
-          const contract = new ethers.Contract(contractAddress, abi, signer);
+          console.log('MyTitles: Using contract address:', contractAddresses.TimeBoundBeats);
+          console.log('MyTitles: Account:', account);
           
-          // Debug logging
+          // First verify the contract exists at this address
+          const code = await signer.provider.getCode(contractAddresses.TimeBoundBeats);
+          console.log('MyTitles: Contract code length:', code.length);
+          if (code === '0x') {
+            throw new Error(`No contract deployed at address ${contractAddresses.TimeBoundBeats} on current network`);
+          }
+          
+          const contract = new ethers.Contract(contractAddresses.TimeBoundBeats, abi, signer);
           console.log('Fetching titles for account:', account);
           
           // Check if user owns any tokens first
@@ -57,7 +63,7 @@ const MyTitles = ({ provider, signer, account, refreshTrigger }) => {
     };
 
     fetchTitles();
-  }, [provider, signer, account, refreshTrigger]);
+  }, [provider, signer, account, refreshTrigger, contractAddresses]);
 
   // Show connect wallet prompt if no account connected
   if (!account) {
