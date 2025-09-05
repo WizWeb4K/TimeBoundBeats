@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { NETWORKS, getNetworkByChainId, switchToNetwork } from '../config/networks';
+import { NETWORKS, switchToNetwork } from '../config/networks';
 import EthereumIcon from './EthereumIcon';
 
 const NetworkSwitcher = ({ currentNetwork, onNetworkChange }) => {
